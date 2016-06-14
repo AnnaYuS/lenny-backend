@@ -15,7 +15,7 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
   // install middleware
   swaggerExpress.register(app);
 
-  mongoose.connect('mongodb://localhost:27017/lenny');
+  mongoose.connect('mongodb://Lenny:2368239@ds015334.mlab.com:15334/lennylearny');
   mongoose.connection.on('error', console.error.bind(console, 'connnection error:'));
   mongoose.connection.once('open', function(){
     app.listen(8081, function(){
