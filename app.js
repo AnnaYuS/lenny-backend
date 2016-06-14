@@ -3,6 +3,8 @@
 var SwaggerExpress = require('swagger-express-mw');
 var app = require('express')();
 var mongoose = require('mongoose');
+var port = process.env.PORT || 8081;
+
 module.exports = app; // for testing
 
 var config = {
@@ -18,7 +20,7 @@ SwaggerExpress.create(config, function(err, swaggerExpress) {
   mongoose.connect('mongodb://Lenny:2368239@ds015334.mlab.com:15334/lennylearny');
   mongoose.connection.on('error', console.error.bind(console, 'connnection error:'));
   mongoose.connection.once('open', function(){
-    app.listen(8081, function(){
+    app.listen(port, function(){
       console.log ('App listening on port 8081');
     });
 
