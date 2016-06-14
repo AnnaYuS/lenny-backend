@@ -1,0 +1,489 @@
+swagger: "2.0"
+info:
+  version: "0.0.1"
+  title: Hello World App
+# during dev, should point to your local machine
+host: localhost:10010
+# basePath prefixes all resource paths 
+basePath: /
+# 
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+  /hello:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: hello_world
+    get:
+      description: Returns 'Hello' to the caller
+      # used as the method name of the controller
+      operationId: hello
+      parameters:
+        - name: name
+          in: query
+          description: The name of the person to whom to say hello
+          required: false
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/HelloWorldResponse"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /swagger:
+    x-swagger-pipe: swagger_raw
+
+
+  /paths:
+    x-swagger-router-controller: paths
+    get:
+      summary: Learning paths authored by user for individual and/or group learning
+      description: A collection of paths that user has created for individual learning; a collection of paths that user has created for group learning
+      tags:
+        - Path
+      operationId: index
+      parameters:
+        - name: type
+          in: query
+          type: string
+          enum:
+          - ind
+          - grp
+          required: false
+        - name: my
+          in: query
+          type: boolean
+          required: false
+        - name: status
+          in: query
+          type: string
+          required: false
+          enum:
+          - planned
+          - inprogress
+          - done
+        - name: categoryId
+          in: query
+          description: paths of a specific category
+          required: false
+          type: string
+      responses:
+        200:
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Path"
+
+    post:
+      summary: Add a new path (user logged in)
+      operationId: create
+      tags:
+        - Path
+      parameters:
+        - name: NewPath
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Path"
+      responses:
+        200:
+          description: successful operation
+          schema:
+            $ref: "#/definitions/Path"
+
+  /paths/{pathId}:
+      x-swagger-router-controller: paths
+      get:
+        operationId: show
+        summary: A learning path
+        tags:
+          - Path
+        parameters:
+          - name: pathId
+            in: path
+            required: true
+            type: string
+        responses:
+          200:
+            description: successful operation
+            schema:
+              $ref: "#/definitions/Path"
+      put:
+        operationId: update
+        summary: Update path
+        tags:
+          - Path
+        parameters:
+          - name: pathId
+            in: path
+            required: true
+            type: string
+          - name: Path
+            in: body
+            required: true
+            schema:
+              $ref: "#/definitions/Path"
+        responses:
+          204:
+            description: path updated
+          400:
+            description: Invalid input
+      delete:
+        operationId: destroy
+        summary: Delete path
+        tags:
+          - Path
+        parameters:
+          - name: pathId
+            in: path
+            required: true
+            type: string
+        responses:
+          204:
+            description: path deleted
+
+  /categories:
+    x-swagger-router-controller: categories
+    get:
+      operationId: index
+      summary: List of all categories
+      tags:
+        - Categories
+      responses:
+        200:
+          description: successful operation
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Category"
+
+    post:
+      operationId: create
+      summary: Add a new category (admin access required)
+      tags:
+        - Categories
+      parameters:
+        - name: NewCategory
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Category"
+      responses:
+        201:
+          description: category created
+          schema:
+            $ref: "#/definitions/Category"
+        400:
+          description: Invalid input
+
+  /categories/{categoryId}:
+    x-swagger-router-controller: categories
+    get:
+      operationId: show
+      summary: A category name
+      tags:
+        - Categories
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: successful operation
+          schema:
+            $ref: "#/definitions/Category"
+
+    delete:
+      operationId: destroy
+      summary: Delete a category from the list of categories (admin access required)
+      tags:
+        - Categories
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          type: string
+      responses:
+        204:
+          description: successful operation
+
+    put:
+      operationId: update
+      summary: Update a category in the list of categories (admin access required)
+      tags:
+        - Categories
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          type: string
+        - name: Category
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Category"
+      responses:
+        204:
+          description: category updated
+        400:
+          description: Invalid input
+
+  /paths/{pathId}/steps:
+      x-swagger-router-controller: steps
+      get:
+        operationId: index
+        summary: All steps of the learning path
+        tags:
+          - Steps
+        parameters:
+          - name: pathId
+            in: path
+            required: true
+            type: string
+        responses:
+          200:
+            description: successful operation
+            schema:
+              type: array
+              items:
+                $ref: "#/definitions/PathStep"
+      post:
+        operationId: create
+        summary: Add a step to the learning path
+        description: User can add a step to a path authored or cloned by him/her
+        tags:
+          - Steps
+        parameters:
+          - name: pathId
+            in: path
+            required: true
+            type: string
+          - name: pathStep
+            in: body
+            required: true
+            schema:
+              $ref: "#/definitions/PathStep"
+        responses:
+          201:
+            description: step added to the path
+            schema:
+              $ref: "#/definitions/PathStep"
+          400:
+            description: Invalid input
+  /paths/{pathId}/comments:
+      x-swagger-router-controller: comments
+      get:
+        summary: All users comments to the learning path
+        operationId: index
+        description: |
+          todo: pagination!
+        tags:
+          - Comments
+        parameters:
+          - name: pathId
+            in: path
+            required: true
+            type: string
+        responses:
+          200:
+            description: successful operation
+            schema:
+              type: array
+              items:
+                $ref: "#/definitions/PathComment"
+
+      post:
+        summary: Post a comment to a learning path
+        operationId: create
+        description: Any user can post a comment and/or reply to comments
+        tags:
+          - Comments
+        parameters:
+          - name: pathId
+            in: path
+            required: true
+            type: string
+          - name: pathComment
+            in: body
+            required: true
+            schema:
+              $ref: "#/definitions/PathComment"
+        responses:
+          201:
+            description: comment created
+            schema:
+              $ref: "#/definitions/PathComment"
+          400:
+            description: Invalid input
+
+# complex objects have schema definitions
+definitions:
+  HelloWorldResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+  ErrorResponse:
+    required:
+      - message
+    properties:
+      message:
+        type: string
+
+  Path:
+    type: object
+    properties:
+      _id:
+        type: string
+      categories:
+        type: array
+        items:
+          $ref: "#/definitions/Category"
+      name:
+        type: string
+        description: Name of the learning path
+      description:
+        type: string
+        description: Short description of the learning path
+      author:
+        $ref: "#/definitions/User"
+      steps:
+        type: array
+        items:
+          $ref: "#/definitions/PathStep"
+      comments:
+        type: array
+        items:
+          $ref: "#/definitions/PathComment"
+      individual:
+        type: boolean
+      group:
+        type: boolean
+      rating:
+        type: integer
+        minimum: 1
+        maximum: 5
+      admin:
+        $ref: "#/definitions/User"
+      participants:
+        type: array
+        items:
+          $ref: "#/definitions/User"
+      originalPathId:
+        type: string
+        description: id of the original path. If this is an empty string, the path is original, else it is a clone
+      clonedBy:
+        type: array
+        items:
+          $ref: "#/definitions/User"
+      fromDateOfEnrolment:
+        type: string
+        format: date-time
+      toDateOfEnrolment:
+        type: string
+        format: date-time
+
+  Category:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+
+  User:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+          description: Name of the user
+        avatar:
+          type: string
+          description: URL of the user's image
+        pathsAuthored:
+          type: number
+          format: int32
+        pathsCloned:
+          type: number
+          format: int32
+
+  PathStep:
+    type: object
+    properties:
+      _id:
+        type: string
+      name:
+        type: string
+      deadline:
+        type: string
+        format: date-time
+      completed:
+        type: boolean
+      description:
+        type: string
+      notes:
+        type: array
+        items:
+          $ref: "#/definitions/StepNote"
+
+  PathComment:
+    type: object
+    properties:
+      _id:
+        type: string
+      author:
+        $ref: "#/definitions/User"
+      pathId:
+        type: string
+      parentId:
+        type: string
+      slug:
+        type: string
+      fullslug:
+        type: string
+      posted:
+        type: string
+        format: date-time
+      text:
+        type: string
+
+  StepNote:
+    type: object
+    properties:
+      _id:
+        type: string
+      author:
+        $ref: "#/definitions/User"
+      stepId:
+        type: string
+      parentId:
+        type: string
+      slug:
+        type: string
+      full-slug:
+        type: string
+      posted:
+        type: string
+        format: date-time
+      text:
+        type: string
+
